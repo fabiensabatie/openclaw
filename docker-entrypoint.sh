@@ -1,26 +1,29 @@
 #!/bin/sh
 set -eu
 
-CONFIG_DIR="/home/node/.openclaw"
+CONFIG_DIR="/data/.openclaw"
 CONFIG_PATH="$CONFIG_DIR/openclaw.json"
 
-# Required env vars
+# Required vars
 : "${OPENCLAW_GATEWAY_TOKEN:?OPENCLAW_GATEWAY_TOKEN is required}"
 : "${MISSION_CONTROL_ORIGIN:?MISSION_CONTROL_ORIGIN is required}"
 
 # Normalize origin:
-# - accept with or without https://
-# - remove trailing slashes
+# - allow passing with or without https://
+# - remove trailing slash
 ORIGIN="$(printf '%s' "$MISSION_CONTROL_ORIGIN" | sed 's:/*$::')"
 case "$ORIGIN" in
   http://*|https://*) ;;
   *) ORIGIN="https://$ORIGIN" ;;
 esac
 
-# Create required dirs as root before dropping privileges
-mkdir -p "$CONFIG_DIR" /data
+# Ensure OpenClaw uses the same state dir
+export OPENCLAW_STATE_DIR="$CONFIG_DIR"
 
-# Always rewrite config from env so stale volume config can't persist
+# Create required dirs
+mkdir -p "$CONFIG_DIR" /data /workspace
+
+# Always rewrite config from env
 cat > "$CONFIG_PATH" <<EOF
 {
   "gateway": {
@@ -35,11 +38,11 @@ cat > "$CONFIG_PATH" <<EOF
 }
 EOF
 
-# Hand ownership to node user
-chown -R 1000:1000 /home/node/.openclaw /data || true
+# Permissions for node user
+chown -R 1000:1000 /data /workspace || true
 chmod 600 "$CONFIG_PATH" || true
 
-echo "OpenClaw config written. Origin=${ORIGIN}"
+echo "OpenClaw config written to ${CONFIG_PATH}. Origin=${ORIGIN}"
 
-# Run OpenClaw as non-root
-exec su node -s /bin/sh -c "node /app/openclaw.mjs gateway --bind lan --allow-unconfigured"
+# Run as node
+exec su node -s /bin/sh -c "OPENCLAW_STATE_DIR='$CONFIG_DIR' node /app/openclaw.mjs gateway --bind lan --allow-unconfigured"
