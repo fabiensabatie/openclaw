@@ -204,4 +204,4 @@ RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
 HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["node", "/app/openclaw.mjs", "gateway", "--allow-unconfigured"]]
+CMD ["node", "/app/openclaw.mjs", "gateway", "--bind", "lan", "--allow-unconfigured"]
