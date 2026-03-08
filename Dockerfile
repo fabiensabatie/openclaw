@@ -196,11 +196,12 @@ RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
  && chmod 755 /app/openclaw.mjs
 
 ENV NODE_ENV=production
+# Run entrypoint as root so it can fix volume ownership at runtime,
+# then drop to node user inside docker-entrypoint.sh.
+USER root
+COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
 
-# Security hardening: Run as non-root user
-# The node:22-bookworm image includes a 'node' user (uid 1000)
-# This reduces the attack surface by preventing container escape via root privileges
-USER node
 
 # Start gateway server with default config.
 # Binds to loopback (127.0.0.1) by default for security.
