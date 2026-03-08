@@ -1,11 +1,13 @@
 #!/bin/sh
-set -e
+set -eu
 CONFIG_DIR="/home/node/.openclaw"
 CONFIG_PATH="$CONFIG_DIR/openclaw.json"
+# Fail fast if Railway vars are missing
+: "${OPENCLAW_GATEWAY_TOKEN:?OPENCLAW_GATEWAY_TOKEN is required}"
+: "${MISSION_CONTROL_ORIGIN:?MISSION_CONTROL_ORIGIN is required}"
 mkdir -p "$CONFIG_DIR"
-# Write config only if missing (so persistent volume keeps it)
-if [ ! -f "$CONFIG_PATH" ]; then
-  cat > "$CONFIG_PATH" <<EOF
+# Always rewrite config from env so volume can't keep stale values
+cat > "$CONFIG_PATH" <<EOF
 {
   "gateway": {
     "host": "0.0.0.0",
@@ -19,7 +21,7 @@ if [ ! -f "$CONFIG_PATH" ]; then
   }
 }
 EOF
-fi
 chown -R 1000:1000 /home/node/.openclaw /workspace || true
 chmod 600 "$CONFIG_PATH" || true
-exec su node -s /bin/sh -c "node openclaw.mjs gateway --allow-unconfigured"
+echo "OpenClaw config written. Origin=${MISSION_CONTROL_ORIGIN}"
+exec su node -s /bin/sh -c "node /app/openclaw.mjs gateway --allow-unconfigured"
