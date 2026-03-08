@@ -10,13 +10,12 @@ mkdir -p "$CONFIG_DIR"
 cat > "$CONFIG_PATH" <<EOF
 {
   "gateway": {
-    "host": "0.0.0.0",
     "port": 18789,
     "auth": {
       "token": "${OPENCLAW_GATEWAY_TOKEN}"
     },
     "controlUi": {
-      "allowedOrigins": ["${MISSION_CONTROL_ORIGIN}"]
+      "allowedOrigins": ["https://${MISSION_CONTROL_ORIGIN}"]
     }
   }
 }
