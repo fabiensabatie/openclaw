@@ -23,4 +23,7 @@ EOF
 chown -R 1000:1000 /home/node/.openclaw /workspace || true
 chmod 600 "$CONFIG_PATH" || true
 echo "OpenClaw config written. Origin=${MISSION_CONTROL_ORIGIN}"
-exec su node -s /bin/sh -c "node /app/openclaw.mjs gateway --allow-unconfigured"
+mkdir -p /workspace
+chown -R 1000:1000 /home/node/.openclaw /workspace || true
+chmod 600 /home/node/.openclaw/openclaw.json || true
+exec su node -s /bin/sh -c "node /app/openclaw.mjs gateway --bind lan --allow-unconfigured"
